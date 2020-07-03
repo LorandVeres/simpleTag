@@ -57,7 +57,7 @@ class simpleTag {
 	private $inline_tag = array('a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea', 'meta', 'link');
 	private $block_tag = array('address', 'article', 'aside', 'blockquote', 'canvas', 'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video');
 	private $single_tag = array('!DOCTYPE html', 'meta', 'link', 'br', 'img', 'hr', 'input', 'embed', 'bgsound', 'base', 'col', 'source');
-	public $countNum = 0;
+	public $indentNum = 0;
 	private $set_count = TRUE;
 
 	function __construct() {
@@ -194,7 +194,7 @@ class simpleTag {
 	 * @author  Lorand Veres
 	 */
 	private function print_inline_tag($value) {
-		$tf = str_pad("", $this -> countNum + 1, "\t");
+		$tf = str_pad("", $this -> indentNum + 1, "\t");
 		printf("%s", $tf . $value[0] . $value[1][0] . $value[2] . "\n");
 	}
 
@@ -205,7 +205,7 @@ class simpleTag {
 	 * @author  Lorand Veres
 	 */
 	private function print_text($value) {
-		$tf = str_pad("", $this -> countNum + 1, "\t");
+		$tf = str_pad("", $this -> indentNum + 1, "\t");
 		if ($this -> check_plain_txt($value[0]))
 			printf("%s", $tf . $value[0] . "\n");
 	}
@@ -217,7 +217,7 @@ class simpleTag {
 	 * @author  Lorand Veres
 	 */
 	private function print_single_tag($value) {
-		$tf = str_pad("", $this -> countNum + 1, "\t");
+		$tf = str_pad("", $this -> indentNum + 1, "\t");
 		printf("%s", $tf . $value . "");
 	}
 
@@ -228,16 +228,16 @@ class simpleTag {
 	 * @author  Lorand Veres
 	 */
 	private function print_block_tag($value) {
-		$tf = str_pad("", $this -> countNum, "\t");
+		$tf = str_pad("", $this -> indentNum, "\t");
 		// checking for very first block tag if start indenting > 0
-		if ($this -> set_count & $this -> countNum > 0) {
+		if ($this -> set_count & $this -> indentNum > 0) {
 			$value = $tf . $value . "\n";
 			$this -> set_count = FALSE;
 			printf("%s", $value);
 		}
 		// printing the block tags
 		$this -> check_tag_type($value, $this -> block_tag) ? printf("%s", $tf . $value . "\n") : '';
-		!$this -> check_start_tag($value) | $this -> check_tag_type($value, $this -> inline_tag) ? $this -> countNum-- : '';
+		!$this -> check_start_tag($value) | $this -> check_tag_type($value, $this -> inline_tag) ? $this -> indentNum-- : '';
 	}
 
 	/*
@@ -271,7 +271,7 @@ class simpleTag {
 				if (is_string($value[0])) {
 					if ($this -> check_tag_type($value, $this -> block_tag)) {
 						// increment the indenting if block tag
-						$this -> check_start_tag($value[0]) ? $this -> countNum++ : '';
+						$this -> check_start_tag($value[0]) ? $this -> indentNum++ : '';
 						$this -> docOutput($value);
 					} elseif ($this -> check_tag_type($value, $this -> inline_tag) & count($value) === 3) {
 						$this -> print_inline_tag($value);
