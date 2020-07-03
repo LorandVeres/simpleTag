@@ -69,6 +69,9 @@ class simpleTag {
 	 * Use:
 	 *
 	 * simpleTag -> append_tag($into, $tag);
+	 * 
+	 * @return void
+	 * @author  Lorand Veres
 	 *
 	 */
 	public function append_tag(&$into, $tag) {
@@ -83,11 +86,14 @@ class simpleTag {
 
 	/*
 	 * Create a tag. When single tags are printed like <input> the $txt variable
-	 * value provided should be an empty string "". No need to add each attribute 
+	 * value provided should be an empty string "". No need to add each attribute
 	 * at once, it can take a string with multiple attributes concatenated like in
 	 * the example.
 	 * Use:
 	 * $tag = simpleTag -> tag("input", 'type="text" name="fname" value="first name" style="width:100px"', '');
+	 * 
+	 * @return string
+	 * @author  Lorand Veres
 	 */
 	public function tag($tagname, $attr, $txt) {
 		$o = "<";
@@ -121,6 +127,9 @@ class simpleTag {
 	/*
 	 *  @parameter passed is a string. Returning TRUE if in a single_tag array
 	 * Helper function inside docOutput(...)
+	 *
+	 * @return bool
+	 * @author  Lorand Veres
 	 */
 	private function check_single_tag($tag) {
 		in_array($tag, $this -> single_tag) ? $b = true : $b = false;
@@ -130,6 +139,9 @@ class simpleTag {
 	/*
 	 * @parameter passed is a string. Returning TRUE if if is an opening tag
 	 * Helper function inside docOutput(...).
+	 *
+	 * @return bool
+	 * @author  Lorand Veres
 	 */
 	private function check_start_tag($value) {
 		substr($value, 0, 2) !== "</" ? $start_tag = true : $start_tag = false;
@@ -140,6 +152,9 @@ class simpleTag {
 	 * @parameter passed is a string. Returning TRUE if if is a plain text, it may contain
 	 * inline elements embeded in to the text.
 	 * Helper function inside docOutput(...).
+	 *
+	 * @return bool
+	 * @author  Lorand Veres
 	 */
 	private function check_plain_txt($value) {
 		substr($value, 0, 1) !== "<" & substr($value, -1, 1) !== ">" ? $start_tag = true : $start_tag = false;
@@ -150,6 +165,8 @@ class simpleTag {
 	 * Cheking the type of the tag.
 	 * Helper function inside docOutput.
 	 *
+	 * @return bool
+	 * @author  Lorand Veres
 	 */
 	private function chek_tag_type($tag, $array) {
 		$n = false;
@@ -162,14 +179,72 @@ class simpleTag {
 		}
 		$tag_array = explode(' ', $txt_tag);
 		$tag_array[0] = str_replace('<', '', $tag_array[0]);
+		$tag_array[0] = str_replace('/', '', $tag_array[0]);
 		$tag_array[0] = str_replace('>', '', $tag_array[0]);
 		in_array($tag_array[0], $array) ? $n = true : $n = false;
 		return $n;
 	}
 
+	/**
+	 *
+	 *
+	 * Helper function inside docOutput.
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	private function print_inline_tag($value) {
+		$tf = str_pad("", $this -> countNum + 1, "\t");
+		printf("%s", $tf . $value[0] . $value[1][0] . $value[2] . "\n");
+	}
+
+	/**
+	 * Helper function inside docOutput.
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	private function print_text($value) {
+		$tf = str_pad("", $this -> countNum + 1, "\t");
+		if ($this -> check_plain_txt($value[0]))
+			printf("%s", $tf . $value[0] . "\n");
+	}
+
+	/**
+	 * Helper function inside docOutput.
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	private function print_single_tag($value) {
+		$tf = str_pad("", $this -> countNum + 1, "\t");
+		printf("%s", $tf . $value . "");
+	}
+
+	/**
+	 * Helper function inside docOutput.
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	private function print_block_tag($value) {
+		$tf = str_pad("", $this -> countNum, "\t");
+		// checking for very first block tag if start indenting > 0
+		if ($this -> set_count & $this -> countNum > 0) {
+			$value = $tf . $value . "\n";
+			$this -> set_count = FALSE;
+			printf("%s", $value);
+		}
+		// printing the block tags
+		$this -> chek_tag_type($value, $this -> block_tag) ? printf("%s", $tf . $value . "\n") : '';
+		!$this -> check_start_tag($value) | $this -> chek_tag_type($value, $this -> inline_tag) ? $this -> countNum-- : '';
+	}
+
 	/*
 	 * Helper function, appending the attributes, used inside simpleTag ->tag(..)
-	 *
+	 * 
+	 * @return void
+	 * @author  Lorand Veres
 	 */
 	private function setAttr($attr) {
 		$attributes = '';
@@ -186,41 +261,31 @@ class simpleTag {
 	/*
 	 * A recursive function doing the heavy printing.
 	 * @argument passsed is the $tag created under the form of Multidimensional Array.
+	 *
+	 * @return void
+	 * @author  Lorand Veres
 	 */
 	public function docOutput($argument) {
 		foreach ($argument as $key => $value) {
 			if (is_array($value) && !empty($value)) {
 				if (is_string($value[0])) {
 					if ($this -> chek_tag_type($value, $this -> block_tag)) {
-						$this -> check_start_tag($value[0]) ?  $this -> countNum++ : '' ;
+						// increment the indenting if block tag
+						$this -> check_start_tag($value[0]) ? $this -> countNum++ : '';
 						$this -> docOutput($value);
 					} elseif ($this -> chek_tag_type($value, $this -> inline_tag) & count($value) === 3) {
-						$tf = str_pad("", $this -> countNum + 1, "\t");
-						printf("%s", $tf.$value[0].$value[1][0].$value[2]."\n");
+						$this -> print_inline_tag($value);
 					} elseif (count($value) === 1) {
-						$tf = str_pad("", $this -> countNum + 1, "\t");
-						if($this -> check_plain_txt($value[0]))
-						printf("%s", $tf.$value[0]);
+						$this -> print_text($value);
 					}
 				} else {
 					$this -> docOutput($value);
 				}
 			} elseif (is_string($value)) {
-				$tf = str_pad("", $this -> countNum - 1, "\t");
 				if ($this -> chek_tag_type($value, $this -> single_tag)) {
-					$tf = str_pad("", $this -> countNum +1, "\t");
-					printf("%s", $tf.$value );
+					$this -> print_single_tag($value);
 				} else {
-					if($this->set_count){
-						$tf = str_pad("", $this -> countNum, "\t");
-						$value = $tf.$value;
-						$this->set_count = FALSE;
-					}
-					$tf = str_pad("", $this -> countNum, "\t");
-					$te = str_pad("", $this -> countNum - 1, "\t");
-					$this -> check_start_tag($value) ? $is_substr = $tf.$value."\n" : $is_substr = $tf.$value."\n";
-					$this -> chek_tag_type($value, $this -> block_tag) ? printf("%s", $is_substr) : '';
-					!$this -> check_start_tag($value) | $this -> chek_tag_type($value, $this -> inline_tag) ?  $this -> countNum-- : '' ;
+					$this -> print_block_tag($value);
 				}
 			}
 		}
