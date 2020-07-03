@@ -53,11 +53,11 @@
 
 class simpleTag {
 
-	public $Doc = array();
+	private $Doc = '';
 	private $inline_tag = array('a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea', 'meta', 'link');
 	private $block_tag = array('address', 'article', 'aside', 'blockquote', 'canvas', 'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video');
 	private $single_tag = array('!DOCTYPE html', 'meta', 'link', 'br', 'img', 'hr', 'input', 'embed', 'bgsound', 'base', 'col', 'source');
-	public $indentNum = 0;
+	private $indentNum = 0;
 	private $set_count = TRUE;
 
 	function __construct() {
@@ -69,7 +69,7 @@ class simpleTag {
 	 * Use:
 	 *
 	 * simpleTag -> append_tag($into, $tag);
-	 * 
+	 *
 	 * @return void
 	 * @author  Lorand Veres
 	 *
@@ -91,7 +91,7 @@ class simpleTag {
 	 * the example.
 	 * Use:
 	 * $tag = simpleTag -> tag("input", 'type="text" name="fname" value="first name" style="width:100px"', '');
-	 * 
+	 *
 	 * @return string
 	 * @author  Lorand Veres
 	 */
@@ -242,7 +242,7 @@ class simpleTag {
 
 	/*
 	 * Helper function, appending the attributes, used inside simpleTag ->tag(..)
-	 * 
+	 *
 	 * @return void
 	 * @author  Lorand Veres
 	 */
@@ -260,12 +260,13 @@ class simpleTag {
 
 	/*
 	 * A recursive function doing the heavy printing.
-	 * @argument passsed is the $tag created under the form of Multidimensional Array.
+	 * @argument passsed is a document fragment created under the form of
+	 * a multidimensional Array. See example .
 	 *
 	 * @return void
 	 * @author  Lorand Veres
 	 */
-	public function docOutput($argument) {
+	private function docOutput($argument) {
 		foreach ($argument as $key => $value) {
 			if (is_array($value) && !empty($value)) {
 				if (is_string($value[0])) {
@@ -289,6 +290,26 @@ class simpleTag {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Print the document and reset the internal objects to default values
+	 * @param indentNum = int. Is optional, helpful if you would like to
+	 * align the indentation in your HTML output to the existing position
+	 * for improved human visibility.
+	 * Use:
+	 * simpleTag -> print_doc($doc_array, [$indentNum]);
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	public function print_doc($arguments) {
+		$arg = func_get_args();
+		if (isset($arg[1]))
+			$this -> indentNum = $arg[1];
+		$this -> docOutput($arg[0]);
+		$this -> indentNum = 0;
+		$this -> set_count = TRUE;
 	}
 
 }// end of class
