@@ -168,7 +168,7 @@ class simpleTag {
 	 * @return bool
 	 * @author  Lorand Veres
 	 */
-	private function chek_tag_type($tag, $array) {
+	private function check_tag_type($tag, $array) {
 		$n = false;
 		$txt_tag;
 		if (is_array($tag)) {
@@ -236,8 +236,8 @@ class simpleTag {
 			printf("%s", $value);
 		}
 		// printing the block tags
-		$this -> chek_tag_type($value, $this -> block_tag) ? printf("%s", $tf . $value . "\n") : '';
-		!$this -> check_start_tag($value) | $this -> chek_tag_type($value, $this -> inline_tag) ? $this -> countNum-- : '';
+		$this -> check_tag_type($value, $this -> block_tag) ? printf("%s", $tf . $value . "\n") : '';
+		!$this -> check_start_tag($value) | $this -> check_tag_type($value, $this -> inline_tag) ? $this -> countNum-- : '';
 	}
 
 	/*
@@ -269,11 +269,11 @@ class simpleTag {
 		foreach ($argument as $key => $value) {
 			if (is_array($value) && !empty($value)) {
 				if (is_string($value[0])) {
-					if ($this -> chek_tag_type($value, $this -> block_tag)) {
+					if ($this -> check_tag_type($value, $this -> block_tag)) {
 						// increment the indenting if block tag
 						$this -> check_start_tag($value[0]) ? $this -> countNum++ : '';
 						$this -> docOutput($value);
-					} elseif ($this -> chek_tag_type($value, $this -> inline_tag) & count($value) === 3) {
+					} elseif ($this -> check_tag_type($value, $this -> inline_tag) & count($value) === 3) {
 						$this -> print_inline_tag($value);
 					} elseif (count($value) === 1) {
 						$this -> print_text($value);
@@ -282,7 +282,7 @@ class simpleTag {
 					$this -> docOutput($value);
 				}
 			} elseif (is_string($value)) {
-				if ($this -> chek_tag_type($value, $this -> single_tag)) {
+				if ($this -> check_tag_type($value, $this -> single_tag)) {
 					$this -> print_single_tag($value);
 				} else {
 					$this -> print_block_tag($value);
