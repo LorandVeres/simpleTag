@@ -54,11 +54,13 @@
 class simpleTag {
 
 	public $Doc = array();
-	protected $inline_tag = array('a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea', 'meta', 'link');
-	protected $single_tag = array('!DOCTYPE html', 'meta', 'link', 'br', 'img', 'hr', 'input', 'embed', 'bgsound', 'base', 'col', 'source');
-	private $countNum = 0;
+	private $inline_tag = array('a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea', 'meta', 'link');
+	private $block_tag = array('address', 'article', 'aside', 'blockquote', 'canvas', 'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video');
+	private $single_tag = array('!DOCTYPE html', 'meta', 'link', 'br', 'img', 'hr', 'input', 'embed', 'bgsound', 'base', 'col', 'source');
+	public $countNum = 0;
+	private $set_count = TRUE;
 
-	function __construct($config, $DBconect) {
+	function __construct() {
 
 	}
 
@@ -111,8 +113,7 @@ class simpleTag {
 			$tag[] = $o . $e . $tagname . $c;
 
 		} elseif ($single) {
-			$tag = ' ';
-			$tag .= ($o . $tagname . $this -> setAttr($attr) . $c);
+			!$txt ? $tag = ($o . $tagname . $this -> setAttr($attr) . $c) : $tag = ($o . $tagname . $this -> setAttr($attr) . $c) . "\n";
 		}
 		return $tag;
 	}
@@ -126,58 +127,23 @@ class simpleTag {
 		return $b;
 	}
 
-	public function addAttr($tag, $attr) {
-
-	}
-
-	public function changeAttr($tag, $old, $new) {
-
-	}
-
-	public function addText($tag, $text) {
-
+	/*
+	 * @parameter passed is a string. Returning TRUE if if is an opening tag
+	 * Helper function inside docOutput(...).
+	 */
+	private function check_start_tag($value) {
+		substr($value, 0, 2) !== "</" ? $start_tag = true : $start_tag = false;
+		return $start_tag;
 	}
 
 	/*
-	 * A recursive function doing the heavy printing.
-	 * @argument passsed is the $tag created under the form of Multidimensional Array.
+	 * @parameter passed is a string. Returning TRUE if if is a plain text, it may contain
+	 * inline elements embeded in to the text.
+	 * Helper function inside docOutput(...).
 	 */
-	public function docOutput($argument) {
-		foreach ($argument as $key => $value) {
-			if (is_array($value) && !empty($value)) {
-				if (is_string($value[0])) {
-					if (!$this -> chek_inline_tag($value, $this -> inline_tag)) {
-						$this -> indent($value);
-					} else {
-						if (count($value) === 3) {
-							printf("%s%s%s", $value[0], $value[1][0], $value[2]);
-						} elseif (count($value) <= 1) {
-							printf("%s", $value[0]);
-						}
-					}
-				} else {
-					$this -> docOutput($value);
-				}
-			} elseif (is_string($value)) {
-				printf("%s", $value);
-			}
-		}
-	}
-
-	/*
-	 * Helper function inside docOutput(...). helping wit indentation.
-	 *
-	 */
-	private function indent($value) {
-		$tf = '';
-		$te = '';
-		$tf = str_pad($tf, $this -> countNum, "\t");
-		$te = str_pad($te, $this -> countNum - 1, "\t");
-		$this -> countNum++;
-		printf("\n%s", $tf);
-		$this -> docOutput($value);
-		printf("\n");
-		$this -> countNum--;
+	private function check_plain_txt($value) {
+		substr($value, 0, 1) !== "<" & substr($value, -1, 1) !== ">" ? $start_tag = true : $start_tag = false;
+		return $start_tag;
 	}
 
 	/*
@@ -185,7 +151,7 @@ class simpleTag {
 	 * Helper function inside docOutput.
 	 *
 	 */
-	private function chek_inline_tag($tag, $array) {
+	private function chek_tag_type($tag, $array) {
 		$n = false;
 		$txt_tag;
 		if (is_array($tag)) {
@@ -215,6 +181,61 @@ class simpleTag {
 			$attributes .= ' ' . $attr;
 		}
 		return $attributes;
+	}
+
+	/*
+	 * A recursive function doing the heavy printing.
+	 * @argument passsed is the $tag created under the form of Multidimensional Array.
+	 */
+	public function docOutput($argument) {
+		foreach ($argument as $key => $value) {
+			if (is_array($value) && !empty($value)) {
+				if (is_string($value[0])) {
+					if ($this -> chek_tag_type($value, $this -> block_tag)) {
+						$this -> check_start_tag($value[0]) ?  $this -> countNum++ : '' ;
+						$this -> docOutput($value);
+					} elseif ($this -> chek_tag_type($value, $this -> inline_tag) & count($value) === 3) {
+						$tf = str_pad("", $this -> countNum + 1, "\t");
+						$this->countNum > 0 & $tf !== "" ? $first = TRUE : $first = FALSE;
+						if(strlen($tf) > 0 & $first){
+							$tff = $tf;
+							$first = false;
+						}
+						printf("%s", $tff.$value[0].$value[1][0].$value[2]."\n");
+					} elseif (count($value) === 1) {
+						$tf = str_pad("", $this -> countNum + 1, "\t");
+						if($this -> check_plain_txt($value[0]))
+						printf("%s", $tf.$value[0]);
+					}
+				} else {
+					$this -> docOutput($value);
+				}
+			} elseif (is_string($value)) {
+				$tf = str_pad("", $this -> countNum - 1, "\t");
+				if ($this -> chek_tag_type($value, $this -> single_tag)) {
+					$tf = str_pad("", $this -> countNum +1, "\t");
+					$this->countNum > 0 & $tf !== "" ? $first = TRUE : $first = FALSE;
+						if(strlen($tf) > 0 & $first){
+							$tff = $tf;
+							$first = false;
+						}
+					$new_line = strpos($value, "\n", strlen($value) - 1);
+					$new_line = "\n" ? printf("%s", $tff.$value ) : printf("%s", $value);
+					$new_line = FALSE;
+				} else {
+					if($this->set_count){
+						$tf = str_pad("", $this -> countNum, "\t");
+						$value = $tf.$value;
+						$this->set_count = FALSE;
+					}
+					$tf = str_pad("", $this -> countNum, "\t");
+					$te = str_pad("", $this -> countNum - 1, "\t");
+					$this -> check_start_tag($value) ? $is_substr = $tf.$value."\n" : $is_substr = "\n$tf".$value."\n";
+					$this -> chek_tag_type($value, $this -> block_tag) ? printf("%s", $is_substr) : '';
+					!$this -> check_start_tag($value) | $this -> chek_tag_type($value, $this -> inline_tag) ?  $this -> countNum-- : '' ;
+				}
+			}
+		}
 	}
 
 }// end of class
