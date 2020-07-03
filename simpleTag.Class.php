@@ -83,11 +83,11 @@ class simpleTag {
 
 	/*
 	 * Create a tag. When single tags are printed like <input> the $txt variable
-	 * it is treated like a bool. if($txt) a new line character "\n" will be printed
-	 * at the end. No need to add each attribute at once, it can take a string
-	 * with multiple attributes concatenated like in the example.
+	 * value provided should be an empty string "". No need to add each attribute 
+	 * at once, it can take a string with multiple attributes concatenated like in
+	 * the example.
 	 * Use:
-	 * $tag = simpleTag -> tag("input", 'type="text" name="fname" value="first name" style="width:100px"', '1');
+	 * $tag = simpleTag -> tag("input", 'type="text" name="fname" value="first name" style="width:100px"', '');
 	 */
 	public function tag($tagname, $attr, $txt) {
 		$o = "<";
@@ -113,7 +113,7 @@ class simpleTag {
 			$tag[] = $o . $e . $tagname . $c;
 
 		} elseif ($single) {
-			!$txt ? $tag = ($o . $tagname . $this -> setAttr($attr) . $c) : $tag = ($o . $tagname . $this -> setAttr($attr) . $c) . "\n";
+			$tag = ($o . $tagname . $this -> setAttr($attr) . $c . $n);
 		}
 		return $tag;
 	}
@@ -196,12 +196,7 @@ class simpleTag {
 						$this -> docOutput($value);
 					} elseif ($this -> chek_tag_type($value, $this -> inline_tag) & count($value) === 3) {
 						$tf = str_pad("", $this -> countNum + 1, "\t");
-						$this->countNum > 0 & $tf !== "" ? $first = TRUE : $first = FALSE;
-						if(strlen($tf) > 0 & $first){
-							$tff = $tf;
-							$first = false;
-						}
-						printf("%s", $tff.$value[0].$value[1][0].$value[2]."\n");
+						printf("%s", $tf.$value[0].$value[1][0].$value[2]."\n");
 					} elseif (count($value) === 1) {
 						$tf = str_pad("", $this -> countNum + 1, "\t");
 						if($this -> check_plain_txt($value[0]))
@@ -214,14 +209,7 @@ class simpleTag {
 				$tf = str_pad("", $this -> countNum - 1, "\t");
 				if ($this -> chek_tag_type($value, $this -> single_tag)) {
 					$tf = str_pad("", $this -> countNum +1, "\t");
-					$this->countNum > 0 & $tf !== "" ? $first = TRUE : $first = FALSE;
-						if(strlen($tf) > 0 & $first){
-							$tff = $tf;
-							$first = false;
-						}
-					$new_line = strpos($value, "\n", strlen($value) - 1);
-					$new_line = "\n" ? printf("%s", $tff.$value ) : printf("%s", $value);
-					$new_line = FALSE;
+					printf("%s", $tf.$value );
 				} else {
 					if($this->set_count){
 						$tf = str_pad("", $this -> countNum, "\t");
@@ -230,7 +218,7 @@ class simpleTag {
 					}
 					$tf = str_pad("", $this -> countNum, "\t");
 					$te = str_pad("", $this -> countNum - 1, "\t");
-					$this -> check_start_tag($value) ? $is_substr = $tf.$value."\n" : $is_substr = "\n$tf".$value."\n";
+					$this -> check_start_tag($value) ? $is_substr = $tf.$value."\n" : $is_substr = $tf.$value."\n";
 					$this -> chek_tag_type($value, $this -> block_tag) ? printf("%s", $is_substr) : '';
 					!$this -> check_start_tag($value) | $this -> chek_tag_type($value, $this -> inline_tag) ?  $this -> countNum-- : '' ;
 				}
