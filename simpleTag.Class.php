@@ -260,7 +260,7 @@ class simpleTag {
 
 	/*
 	 * A recursive function doing the heavy printing.
-	 * @argument passsed is a document fragment created under the form of
+	 * @argument array(). It is a document fragment created under the form of
 	 * a multidimensional Array. See example .
 	 *
 	 * @return void
@@ -294,6 +294,7 @@ class simpleTag {
 
 	/**
 	 * Print the document and reset the internal objects to default values
+	 *
 	 * @param indentNum = int. Is optional, helpful if you would like to
 	 * align the indentation in your HTML output to the existing position
 	 * for improved human visibility.
@@ -310,6 +311,92 @@ class simpleTag {
 		$this -> docOutput($arg[0]);
 		$this -> indentNum = 0;
 		$this -> set_count = TRUE;
+	}
+
+	/**
+	 * Setting up the attributes array, if not provided one array with
+	 * empty elements initialised
+	 * Helper function in print_table
+	 *
+	 * @return $in_attr (array)
+	 * @author  Lorand Veres
+	 */
+	private function table_attr($my_data) {
+		if (isset($my_data['attr'])) {
+			$in_attr = $my_data['attr'];
+		} else {
+			for ($i = 0; $i < count($my_data['data'][0]); $i++) {
+				$in_attr[$i] = '';
+			}
+		}
+		return $in_attr;
+	}
+
+	/**
+	 * Self deducting that the table head is generated
+	 * Helper function in print_table
+	 *
+	 * @return $table (array)
+	 * @author  Lorand Veres
+	 */
+	private function table_head($my_data, $in_attr, $table) {
+		if (isset($my_data['th'])) {
+			$tr = $this -> tag('tr', '', '');
+			for ($i = 0; $i < count($my_data['th']); $i++) {
+				$this -> append_tag($tr, $this -> tag('th', $in_attr[$i], $my_data['th'][$i]));
+			}
+			$this -> append_tag($table, $tr);
+		}
+		return $table;
+	}
+
+	/**
+	 * Self deducting that the table body is generated
+	 * Helper function in print_table
+	 *
+	 * @return $table (array)
+	 * @author  Lorand Veres
+	 */
+	private function table_body($my_data, $in_attr, $table) {
+		if (isset($my_data['data'])) {
+			for ($i = 0; $i < count($my_data['data']); $i++) {
+				$tr[$i] = $this -> tag('tr', '', '');
+				for ($j = 0; $j < count($my_data['data'][$i]); $j++) {
+					$this -> append_tag($tr[$i], $this -> tag('td', $in_attr[$j], $my_data['data'][$i][$j]));
+				}
+				$this -> append_tag($table, $tr[$i]);
+			}
+		} else {
+			echo "simpleTag Fatal Error at line 333, no data suplied for simpleTag -> table";
+			die();
+		}
+		return $table;
+	}
+
+	/**
+	 * Print the table. All array elemets are optinal but 'data' .
+	 *
+	 * @param  array('tb' => string, 'th' => array(), 'attr' => array()), 'data' => array(array(), array()....))
+	 * 'tb' = string table attributes
+	 * 'th' = th elements text insertion
+	 * 'attr' = optional attributes like style. it has no individual id posibility yet
+	 * 'data' = the text data what will be inserted in each cell
+	 *
+	 * @param  int, the indentation deepness optional
+	 *
+	 * @return void
+	 * @author Lorand Veres
+	 */
+	public function print_table() {
+		$my_data = func_get_arg(0);
+		isset($my_data['tb']) ? $tb_attr = $my_data['tb'] : $tb_attr = '';
+		$table = $this -> tag('table', $tb_attr, '');
+		$in_attr = $this -> table_attr($my_data);
+		if (func_get_args() > 1)
+			$this -> indentNum = func_get_arg(1);
+		$table = $this -> table_head($my_data, $in_attr, $table);
+		$table = $this -> table_body($my_data, $in_attr, $table);
+		$this -> print_doc($table);
 	}
 
 }// end of class
