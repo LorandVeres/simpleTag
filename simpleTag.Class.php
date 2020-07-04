@@ -34,7 +34,7 @@
  * Easy to use and create simple HTML blocks, what are more often in use to format
  * data from a given array using PHP.
  *
- * The intended purpose it is just to print the data in a very handy fasion wihout
+ * The intended purpose it is just to print the data in a very handy fashion without
  * having to mess up the php code. simpleTag is not intended to manipulate any XML
  * documents or fragments.
  *
@@ -392,11 +392,47 @@ class simpleTag {
 		isset($my_data['tb']) ? $tb_attr = $my_data['tb'] : $tb_attr = '';
 		$table = $this -> tag('table', $tb_attr, '');
 		$in_attr = $this -> table_attr($my_data);
-		if (func_get_args() > 1)
+		if (func_num_args() > 1)
 			$this -> indentNum = func_get_arg(1);
 		$table = $this -> table_head($my_data, $in_attr, $table);
 		$table = $this -> table_body($my_data, $in_attr, $table);
 		$this -> print_doc($table);
+	}
+
+	/**
+	 * Print lists. 
+	 * @param First param can be string or aray to define the list type and
+	 * maybe suply attributes
+	 * @param Second param is an array of list elemts, or 2 dimensional array for definition lists
+	 * @param Third param optional to increase deepness
+	 *   
+	 * @param example array('item 1', 'ietm 2', 'item 3', 'item 4');
+	 * Use: 
+	 * print_list('ul', array('item 1', 'ietm 2', 'item 3', 'item 4'), 3)
+	 * print_list(array('ol', 'start="8"'), array('item 1', 'ietm 2', 'item 3', 'item 4'), 3)
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	public function print_list() {
+		$my_list_type = func_get_arg(0);
+		$my_items = func_get_arg(1);
+		if (func_num_args() > 2)
+			$this -> indentNum = func_get_arg(2);
+		is_array($my_list_type) & isset($my_list_type[1]) ? $attr = $my_list_type[1][0] : $attr = '';
+		!is_string($my_list_type) ? $list_type = $my_list_type[0] : $list_type = $my_list_type;
+		$list = $this -> tag($list_type, $attr, '');
+		if ($list_type === 'ol' | $list_type === 'ul') {
+			foreach ($my_items as $key => $value) {
+				$this -> append_tag($list, $this -> tag('li', '', $value));
+			}
+		} elseif ($list_type === 'dl') {
+			foreach ($my_items as $value) {
+				$this -> append_tag($list, $this -> tag('dt', '', $value[0]));
+				$this -> append_tag($list, $this -> tag('dd', '', $value[1]));
+			}
+		}
+		$this -> print_doc($list);
 	}
 
 }// end of class
