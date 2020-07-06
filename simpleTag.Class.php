@@ -54,8 +54,8 @@
 class simpleTag {
 
 	private $Doc = '';
-	private $inline_tag = array('a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea', 'meta', 'link');
-	private $block_tag = array('address', 'article', 'aside', 'blockquote', 'canvas', 'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video');
+	private $inline_tag = array('a', 'abbr', 'acronym', 'b', 'bdo', 'big', 'br',  'button', 'i', 'cite', 'code', 'dfn', 'dd', 'dt', 'em', 'hr', 'img', 'input', 'kbd', 'label', 'li', 'link', 'map', 'meta', 'object', 'option', 'q', 'script', 'samp',  'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'time', 'tt', 'var');
+	private $block_tag = array('address', 'article', 'aside', 'blockquote', 'canvas', 'div', 'dl', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'select', 'table', 'tfoot', 'ul', 'video');
 	private $single_tag = array('!DOCTYPE html', 'meta', 'link', 'br', 'img', 'hr', 'input', 'embed', 'bgsound', 'base', 'col', 'source');
 	private $indentNum = 0;
 	private $set_count = TRUE;
@@ -400,14 +400,14 @@ class simpleTag {
 	}
 
 	/**
-	 * Print lists. 
+	 * Print lists.
 	 * @param First param can be string or aray to define the list type and
 	 * maybe suply attributes
 	 * @param Second param is an array of list elemts, or 2 dimensional array for definition lists
 	 * @param Third param optional to increase deepness
-	 *   
+	 *
 	 * @param example array('item 1', 'ietm 2', 'item 3', 'item 4');
-	 * Use: 
+	 * Use:
 	 * print_list('ul', array('item 1', 'ietm 2', 'item 3', 'item 4'), 3)
 	 * print_list(array('ol', 'start="8"'), array('item 1', 'ietm 2', 'item 3', 'item 4'), 3)
 	 *
@@ -433,6 +433,26 @@ class simpleTag {
 			}
 		}
 		$this -> print_doc($list);
+	}
+
+	/**
+	 * Print out a select option group
+	 * @param (string) $attr , representing select element attributes
+	 * @param (array) $values = array( array('value="peach"' , 'Peach'), array('value="apple"' , 'Apple'))
+	 * @param (int) the indent deepnes, optional
+	 *
+	 * @return void
+	 * @author  Lorand Veres
+	 */
+	public function print_select_option($attr, $values){
+		if(func_num_args() > 2)
+			$this -> indentNum = func_get_arg(2);
+		$select_el = $this -> tag('select', $attr, '');
+		for($i = 0; $i < count($values); $i++) {
+			$option = $this -> tag('option', $values[$i][0], $values[$i][1]);
+			$this -> append_tag($select_el, $option);
+		}
+		$this -> print_doc($select_el);
 	}
 
 }// end of class
