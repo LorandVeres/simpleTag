@@ -385,7 +385,8 @@ class simpleTag {
 				$this -> append_tag($table, $tr[$i]);
 			}
 		} else {
-			die("simpleTag Error, no data suplied for simpleTag -> table");
+			echo "simpleTag Fatal Error at line 360, no data suplied for simpleTag -> table";
+			die();
 		}
 		return $table;
 	}
@@ -466,8 +467,11 @@ class simpleTag {
 			$this -> indentNum = func_get_arg(2);
 		$select_el = $this -> tag('select', $attr, '');
 		for($i = 0; $i < count($values); $i++) {
-			$option = $this -> tag('option', $values[$i][0], $values[$i][1]);
-			$this -> append_tag($select_el, $option);
+			if(is_array($values[$i])) {
+				$clean = array_values($values[$i]);
+				substr($clean[0], 0, 6) === 'value=' ? $clean[0] : $clean[0] = 'value="'.$clean[0].'"';
+				$this -> append_tag($select_el, $this -> tag('option', $clean[0], $clean[1]));
+			}
 		}
 		$this -> print_doc($select_el);
 	}
