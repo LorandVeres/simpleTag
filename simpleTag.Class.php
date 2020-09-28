@@ -349,9 +349,26 @@ class simpleTag {
 		}
 		return $table;
 	}
+	
+	/**
+	 * Numeric data will have cells style text-align:right
+	 *
+	 * @return string
+	 * @author  Lorand Veres
+	 */
+	private function cell_numeric_right($attr, $data){
+		if(is_numeric($data)){
+			if(strpos($attr, 'text-align:')){
+				str_replace('text-align:left', 'text-align: right', $attr) | str_replace('text-align: left', 'text-align: right', $$attr);
+			}else{
+				$attr .= 'text-align: right';
+			}
+		}
+		return $attr;
+	}
 
 	/**
-	 * Self deducting that the table body is generated
+	 * Self deducting that the table body is generated.
 	 * Helper function in print_table
 	 *
 	 * @return $table (array)
@@ -362,13 +379,13 @@ class simpleTag {
 			for ($i = 0; $i < count($my_data['data']); $i++) {
 				$tr[$i] = $this -> tag('tr', '', '');
 				for ($j = 0; $j < count($my_data['data'][$i]); $j++) {
+					$in_attr[$j] = $this -> cell_numeric_right($in_attr[$j], $my_data['data'][$i][$j]);
 					$this -> append_tag($tr[$i], $this -> tag('td', $in_attr[$j], $my_data['data'][$i][$j]));
 				}
 				$this -> append_tag($table, $tr[$i]);
 			}
 		} else {
-			echo "simpleTag Fatal Error at line 333, no data suplied for simpleTag -> table";
-			die();
+			die("simpleTag Error, no data suplied for simpleTag -> table");
 		}
 		return $table;
 	}
